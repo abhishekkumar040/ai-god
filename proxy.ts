@@ -1,18 +1,19 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isClerkConfigured = 
-  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
-  !!process.env.CLERK_SECRET_KEY;
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard",
+  "/dashboard/:path*"
+]);
 
-export default isClerkConfigured 
-  ? clerkMiddleware() 
-  : () => NextResponse.next();
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect();
+});
 
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html|css|js|gif|svg|jpg|jpeg|png|woff|woff2|ico|csv|docx|xlsx|zip|webmanifest)).*)',
+    '/((?!_next|[^?]*\\.(?:html|css|js|gif|jpg|jpeg|png|webp|ico|csv|docx|xlsx)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
