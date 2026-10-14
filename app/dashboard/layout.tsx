@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/custom/dashboard/AppSidebar';
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -8,6 +8,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex-1">
                 <SidebarProvider>
                     <AppSidebar />
+                    <SidebarTrigger />
                     {children}
                 </SidebarProvider>
 
