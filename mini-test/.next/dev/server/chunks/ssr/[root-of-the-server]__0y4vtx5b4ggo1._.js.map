@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///Users/abhishekkumar/Desktop/np1/ai-god/mini-test/app/page.tsx"],"sourcesContent":["export default function Page() { return <h1>hello mini</h1>; }\n"],"names":["Page"],"mappings":";;;;;;AAAe,SAASA;IAAS,qBAAO,8OAAC;kBAAG;;;;;;AAAiB"}}]
+}

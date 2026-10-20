@@ -1,4 +1,5 @@
 "use client"
+
 import {
     Sidebar,
     SidebarContent,
@@ -6,88 +7,154 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarHeader,
+    SidebarMenu,
     SidebarMenuButton,
+    SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { UserDetailContext } from "@/context/UserDetailContext";
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image"
+import Link from "next/link"
 import { AppWindow, Blocks, Bot, Layers, Play, Settings, User2 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useContext } from "react";
 import { Progress } from "@/components/ui/progress";
 
+const workspaceNavItems = [
+    {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: AppWindow,
+        bgColor: "bg-blue-100",
+        textColor: "text-blue-900",
+    },
+    {
+        title: "Agents",
+        url: "/agents",
+        icon: Bot,
+        bgColor: "bg-red-100",
+        textColor: "text-red-900",
+    },
+    {
+        title: "Logs",
+        url: "/logs",
+        icon: Play,
+        bgColor: "bg-green-100",
+        textColor: "text-green-900",
+    },
+    {
+        title: "Integration",
+        url: "/integration",
+        icon: Blocks,
+        bgColor: "bg-yellow-100",
+        textColor: "text-yellow-900",
+    },
+    {
+        title: "Templates",
+        url: "/templates",
+        icon: Layers,
+        bgColor: "bg-purple-100",
+        textColor: "text-purple-900",
+    },
+];
+
+const userNavItems = [
+    {
+        title: "Settings",
+        url: "/settings",
+        icon: Settings,
+        bgColor: "bg-gray-100",
+        textColor: "text-gray-900",
+    },
+    {
+        title: "Profile",
+        url: "/profile",
+        icon: User2,
+        bgColor: "bg-slate-100",
+        textColor: "text-slate-900",
+    },
+];
+
 export function AppSidebar() {
     const path = usePathname();
-    const { userDetail } = useContext(UserDetailContext);
+    const { userDetail } = useContext(UserDetailContext) || {};
 
     return (
         <Sidebar>
-            <SidebarHeader className="flex flex-row gap-2.5 items-center px-4 py-2">
-                <Image src={"/logo.svg"} alt="logo" width={40} height={40} />
+            <SidebarHeader className="flex flex-row gap-2.5 items-center px-4 py-3">
+                <Image src="/logo.svg" alt="logo" width={36} height={36} />
                 <h2 className="font-bold text-lg text-slate-900 tracking-wide">AI GOD</h2>
             </SidebarHeader>
+
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/dashboard') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-blue-100 items-center justify-center rounded-md">
-                            <AppWindow className="h-[18px] w-[18px] text-blue-900" />
-                        </div>
-                        <span>Dashboard</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/Agents') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-red-100 items-center justify-center rounded-md">
-                            <Bot className="h-[18px] w-[18px] text-red-900" />
-                        </div>
-                        <span>Agents</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/Logs') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-green-100 items-center justify-center rounded-md">
-                            <Play className="h-[18px] w-[18px] text-green-900" />
-                        </div>
-                        <span>Logs</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/Integration') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-yellow-100 items-center justify-center rounded-md">
-                            <Blocks className="h-[18px] w-[18px] text-yellow-900" />
-                        </div>
-                        <span>Integration</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/Templates') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-purple-100 items-center justify-center rounded-md">
-                            <Layers className="h-[18px] w-[18px] text-purple-900" />
-                        </div>
-                        <span>Templates</span>
-                    </SidebarMenuButton>
+                    <SidebarMenu>
+                        {workspaceNavItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = path === item.url || (item.url !== "/dashboard" && path.startsWith(item.url));
+                            return (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton
+                                        isActive={isActive}
+                                        className={`h-12 gap-3 hover:bg-slate-100 ${isActive ? 'bg-slate-100 font-medium' : ''}`}
+                                    >
+                                        <Link href={item.url} className="flex items-center gap-3 w-full">
+                                            <div className={`flex h-9 w-9 shrink-0 ${item.bgColor} items-center justify-center rounded-md`}>
+                                                <Icon className={`h-[18px] w-[18px] ${item.textColor}`} />
+                                            </div>
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            );
+                        })}
+                    </SidebarMenu>
                 </SidebarGroup>
-                <SidebarGroup>
-                    <SidebarGroupLabel>User's</SidebarGroupLabel>
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/Settings') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-gray-100 items-center justify-center rounded-md">
-                            <Settings className="h-[18px] w-[18px] text-gray-900" />
-                        </div>
-                        <span>Settings</span>
-                    </SidebarMenuButton>
 
-                    <SidebarMenuButton className={`h-12 gap-3 hover:bg-slate-100 ${path.includes('/Profile') ? 'bg-slate-100' : ''}`}>
-                        <div className="flex h-9 w-9 shrink-0 bg-slate-100 items-center justify-center rounded-md">
-                            <User2 className="h-[18px] w-[18px] text-slate-900" />
-                        </div>
-                        <span>Profile</span>
-                    </SidebarMenuButton>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Users</SidebarGroupLabel>
+                    <SidebarMenu>
+                        {userNavItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = path.startsWith(item.url);
+                            return (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton
+                                        isActive={isActive}
+                                        className={`h-12 gap-3 hover:bg-slate-100 ${isActive ? 'bg-slate-100 font-medium' : ''}`}
+                                    >
+                                        <Link href={item.url} className="flex items-center gap-3 w-full">
+                                            <div className={`flex h-9 w-9 shrink-0 ${item.bgColor} items-center justify-center rounded-md`}>
+                                                <Icon className={`h-[18px] w-[18px] ${item.textColor}`} />
+                                            </div>
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            );
+                        })}
+                    </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter>
-                <div className="p-2 border rounded-lg flex gap-2 flex-col">
-                    <h2 className="flex justify-between">Agents <span>{userDetail?.agentCredits}/5</span></h2>
-                    <h2 className="flex justify-between">Credits <span>{userDetail?.usageCredits}</span></h2>
-                    <Progress value={66} />
+
+            <SidebarFooter className="p-3">
+                <div className="p-3 border rounded-lg flex gap-2 flex-col bg-slate-50/50">
+                    <h2 className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Agents</span>
+                        <span className="font-semibold">{userDetail?.agentCredits ?? 0}/5</span>
+                    </h2>
+                    <h2 className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Credits</span>
+                        <span className="font-semibold">{userDetail?.usageCredits ?? 0}</span>
+                    </h2>
+                    <Progress value={userDetail ? ((userDetail.agentCredits ?? 0) / 5) * 100 : 0} />
                 </div>
-                <div className="flex items-center gap-2.5 p-2 mt-2">
+                <div className="flex items-center gap-2.5 p-2 mt-1">
                     <UserButton />
-                    <span>{userDetail?.name}</span>
+                    <span className="text-sm font-medium truncate">{userDetail?.name ?? "User"}</span>
                 </div>
             </SidebarFooter>
         </Sidebar>
-    )
+    );
 }
