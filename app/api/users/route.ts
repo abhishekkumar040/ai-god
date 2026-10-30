@@ -20,8 +20,10 @@ export async function POST(req: NextRequest) {
     // if not then insert new user
     if (userResult.length == 0) {
         const result = await db.insert(users).values({
+            userId: user.id,
             name: user.fullName,
             email: email,
+            imageUrl: user.imageUrl,
         }).returning();
         return NextResponse.json(result[0]);
     }

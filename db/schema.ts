@@ -17,7 +17,22 @@ export const tools = pgTable("tools", {
   id: serial("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
+  description: text("description").notNull(),
   category: text("category").notNull(),
+  provider: text("provider").notNull(),
+  icon: text("icon"),
+  requiresAuth: boolean("requires_auth").default(false).notNull(),
+  authType: text("auth_type"),
+  authProvider: text("auth_provider"),
+  capabilities: jsonb("capabilities"),
+  useCases: jsonb("use_cases"),
+  approvalRules: jsonb("approval_rules"),
+  config: jsonb("config"),
+  riskLevel: text("risk_level").default("low").notNull(),
+  canRead: boolean("can_read").default(true).notNull(),
+  canWrite: boolean("can_write").default(false).notNull(),
+  canDelete: boolean("can_delete").default(false).notNull(),
+  canExecute: boolean("can_execute").default(false).notNull(),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -26,19 +41,38 @@ export const tools = pgTable("tools", {
 export const agentConfig = pgTable("agent_config", {
   id: serial("id").primaryKey(),
   userId: text("user_id").notNull(),
-  agentName: text("agent_name").notNull(), // e.g., research, creator, scheduler, analytics
+  agentName: text("agent_name").notNull(),
+  agentImage: text("agent_image"), // avatar URL (DiceBear)
+  description: text("description"),
+  objective: text("objective"),
   instructions: text("instructions"),
   objectives: jsonb("objectives"),
+  tools: jsonb("tools").$type<string[]>().default([]).notNull(),
+  skills: jsonb("skills").$type<string[]>().default([]).notNull(),
+  scheduleType: text("schedule_type", { enum: ["on_demand", "recurring"] })
+    .default("on_demand")
+    .notNull(),
+  scheduleFrequency: text("schedule_frequency").default("none").notNull(),
+  scheduleTime: text("schedule_time").default("").notNull(),
   scheduleInterval: text("schedule_interval"),
-  isActive: boolean("is_active").default(true).notNull(),
+  outputFormat: text("output_format"),
+  status: text("status", { enum: ["active", "paused", "draft", "archived"] })
+    .default("active")
+    .notNull(), // current state of the agent
+  isActive: boolean("is_active").default(true).notNull(), // legacy, remove once unused
+  lastRunAt: timestamp("last_run_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
 });
 
 // Agent Runs table for tracking execution status, logs, and outputs
 export const agentRun = pgTable("agent_run", {
   id: serial("id").primaryKey(),
   agentConfigId: integer("agent_config_id").references(() => agentConfig.id),
-  status: text("status").notNull(), // e.g., running, completed, failed
+  status: text("status").notNull(), // running, completed, failed
   output: jsonb("output"),
   logs: text("logs"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
