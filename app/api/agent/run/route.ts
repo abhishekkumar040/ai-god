@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { agentConfig, agentRun } from "@/db/schema";
 import { runTools } from "@/lib/agent-tools";
 
-const MODEL = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 export async function POST(req: NextRequest) {
   const { agentId, userId } = await req.json().catch(() => ({}));
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "agentId is required" }, { status: 400 });
   }
 
-  const apiKey = process.env.GOOGLE_CLOUD_GEMINI_API_KEY;
+  const apiKey = process.env.GOOGLE_CLOUD_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "Missing API key" }, { status: 500 });
   }

@@ -96,6 +96,9 @@ function draftToAnswer(q: ClarificationQuestion, d: Draft | undefined): string {
 
 function getErrorMessage(e: unknown): string {
   if (axios.isAxiosError(e)) {
+    if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+      return 'The request took too long to respond. Please click Continue or submit again.'
+    }
     return e.response?.data?.error ?? 'Request failed. Please try again.'
   }
   return 'Something went wrong. Please try again.'
@@ -136,10 +139,14 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await axios.post<AgentConfigResponse>('/api/agent/configure', {
-        prompt: promptText,
-        answers: answers.map(({ question, answer }) => ({ question, answer })),
-      })
+      const { data } = await axios.post<AgentConfigResponse>(
+        '/api/agent/configure',
+        {
+          prompt: promptText,
+          answers: answers.map(({ question, answer }) => ({ question, answer })),
+        },
+        { timeout: 35000 }
+      )
       console.log(data)
 
       if (data.status === 'needs_clarification' && data.clarificationQuestions?.length) {
@@ -151,7 +158,7 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
         setStep('clarify')
       } else if (data.status === 'ready' && data.config) {
         setConfigResult(data)
-        setCreated(true) // saved by the server
+        setCreated(Boolean((data as any).agent))
         setStep('review')
       } else {
         setError('The AI returned an unexpected response. Please try again.')
@@ -192,8 +199,11 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
     setCreating(true)
     setError(null)
     try {
+      if (!created) {
+        await axios.post('/api/agents', { config })
+        setCreated(true)
+      }
       await onCreate?.(config)
-      setCreated(true)
     } catch (e) {
       console.error(e)
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -408,10 +418,12 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
       )}
 
       {/* ======================== STEP: CLARIFY ======================== */}
-      {step === 'clarify' && !loading && (
+      {step === 'clarify' && (
         <div
           ref={resultRef}
-          className="mt-6 scroll-mt-6 rounded-2xl border bg-background p-5 shadow-lg shadow-blue-100/50"
+          className={`mt-6 scroll-mt-6 rounded-2xl border bg-background p-5 shadow-lg shadow-blue-100/50 transition-opacity ${
+            loading ? 'opacity-60 pointer-events-none' : ''
+          }`}
         >
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-blue-600" />
@@ -484,6 +496,7 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
               disabled={!allAnswered || loading}
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-md transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               Continue
             </button>
           </div>
@@ -511,14 +524,14 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
             <Field label="Output format">{config.outputFormat}</Field>
 
             <Field label="Schedule">
-              {config.schedule.type === 'on_demand'
+              {!config.schedule || config.schedule.type === 'on_demand'
                 ? 'On demand (runs when you trigger it)'
-                : `${config.schedule.frequency}${config.schedule.time ? ` at ${config.schedule.time}` : ''}`}
+                : `${config.schedule.frequency ?? 'Recurring'}${config.schedule.time ? ` at ${config.schedule.time}` : ''}`}
             </Field>
 
             <Field label="Tools">
               <div className="flex flex-wrap gap-2">
-                {config.tools.map((t) => (
+                {(config.tools ?? []).map((t) => (
                   <span
                     key={t}
                     className="rounded-full border bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
@@ -529,11 +542,11 @@ function CreateAgent({ onCreate }: CreateAgentProps) {
               </div>
             </Field>
 
-            {config.skills.length > 0 && (
+            {(config.skills ?? []).length > 0 && (
               <div className="md:col-span-2">
                 <Field label="Skills">
                   <div className="flex flex-wrap gap-2">
-                    {config.skills.map((s) => (
+                    {(config.skills ?? []).map((s) => (
                       <span
                         key={s}
                         className="rounded-full border bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
