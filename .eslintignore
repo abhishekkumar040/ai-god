@@ -1,0 +1,6 @@
+# Ignore build artifacts and dependencies
+.next
+node_modules
+out
+dist
+
